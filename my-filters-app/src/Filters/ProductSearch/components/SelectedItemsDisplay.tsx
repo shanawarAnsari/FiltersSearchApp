@@ -77,7 +77,7 @@ const SelectedItemsDisplay: React.FC<SelectedItemsDisplayProps> = ({
               const chipLabel = [
                 ...otherKeys.map((key) => item[key]),
                 pidValue,
-              ].join(" | ");
+              ].join(" ");
 
               return (
                 <Chip

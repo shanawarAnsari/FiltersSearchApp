@@ -6,8 +6,9 @@ import ProductFilters from "../ReusableProductFilters/ProductFilters";
 import { useGetElasticityLevels } from "./hooks/useGetElasticityLevels";
 import { useGetFilters } from "./hooks/useGetFilters";
 import ProductSearch from "./ProductSearch";
-import { productSearchConfig, config, order } from "./config";
+import { config, order } from "./config";
 import { useFilterState } from "../ReusableProductFilters/hooks/useFilterState";
+import { getProductSearchConfig } from "./config";
 
 const Filters = () => {
   const { data: elasticityLevels, loading: loadingElasticityLevels } =
@@ -29,10 +30,16 @@ const Filters = () => {
   const [selectedFilters, setSelectedFilters] = useState<{ [key: string]: any }>({});
   const [filteredData, setFilteredData] = useState<any>(filtersData);
   const { setFilters } = useFilterState(filtersData, order);
+  const productSearchConfig = getProductSearchConfig(elasticityLevel);
 
   useEffect(() => {
     setFilteredData({});
     setFilters({});
+  }, [elasticityLevel]);
+
+  useEffect(() => {
+    const updatedProductSearchConfig = getProductSearchConfig(elasticityLevel);
+    // Use the updated productSearchConfig as needed
   }, [elasticityLevel]);
 
   const handleSelect = (items: any[]) => {
@@ -113,6 +120,7 @@ const Filters = () => {
                 config={productSearchConfig}
                 data={filtersData}
                 onSelect={handleSelect}
+                elasticityLevel={elasticityLevel}
               />
             </Box>
           </Grid>

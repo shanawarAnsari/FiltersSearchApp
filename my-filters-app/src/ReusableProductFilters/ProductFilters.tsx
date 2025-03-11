@@ -6,16 +6,9 @@ import { useFilterState } from "./hooks/useFilterState";
 import { useFilterOptions } from "./hooks/useFilterOptions";
 import { useEffect } from "react";
 
-interface FilterConfig {
-  type: "single" | "multi";
-  label: string;
-}
-
 interface ProductFiltersProps {
   data: Array<Record<string, any>>;
-  config: {
-    [key: string]: FilterConfig;
-  };
+  config: { [key: string]: { type: string; label: string } };
   order: string[];
   layout?: "horizontal" | "vertical";
   onApplyFilters?: (
@@ -42,6 +35,7 @@ const ProductFilters = ({
   useEffect(() => {
     setFilters(preSelectedFilters);
   }, [preSelectedFilters, setFilters]);
+
   const allSingleSelected = order
     .filter((key) => config[key].type === "single")
     .every((key) => selectedFilters[key]);
@@ -60,6 +54,7 @@ const ProductFilters = ({
       onApplyFilters(selectedFilters, filteredData);
     }
   };
+
   return (
     <Grid
       container

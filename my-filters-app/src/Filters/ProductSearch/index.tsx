@@ -11,6 +11,7 @@ const ProductSearch: React.FC<SearchFilterTableProps> = ({
   data,
   onSelectionChange,
   onSelect,
+  elasticityLevel, // Add elasticityLevel prop
 }) => {
   const [searchInput, setSearchInput] = useState("");
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -93,6 +94,7 @@ const ProductSearch: React.FC<SearchFilterTableProps> = ({
         onSelect={onSelect}
         onSelectionChange={onSelectionChange}
         isLoading={isLoading}
+        elasticityLevel={elasticityLevel} // Pass elasticityLevel to SearchResultsPopper
       />
     </div>
   );

@@ -24,11 +24,14 @@ const SearchResultsPopper: React.FC<SearchResultsPopperProps> = ({
   onSelect,
   onSelectionChange,
   isLoading,
+  elasticityLevel, // Add elasticityLevel prop
 }) => {
   const popperRef = useRef<HTMLDivElement | null>(null);
   const [selectedMulti, setSelectedMulti] = useState<Record<string, boolean>>({});
   const [selectedSingle, setSelectedSingle] = useState<number | null>(null);
-  const [selectedRowValues, setSelectedRowValues] = useState<Record<string, string>>({});
+  const [selectedRowValues, setSelectedRowValues] = useState<Record<string, string>>(
+    {}
+  );
   useClickOutside(popperRef, onClose);
 
   // Get unique combinations for the first table
@@ -52,20 +55,70 @@ const SearchResultsPopper: React.FC<SearchResultsPopperProps> = ({
     return Array.from(uniqueMap.values());
   }, [filteredData, config.groups]);
 
-  // Filter data for the second table based on selection in first table
+  // Filter columns based on elasticityLevel
+  const filterColumns = (columns: any[]) => {
+    if (elasticityLevel === "Brand") {
+      return columns.filter(
+        (column) => column.key !== "subBrd" && column.key !== "pid"
+      );
+    } else if (elasticityLevel === "Sub Brand") {
+      return columns.filter((column) => column.key !== "pid");
+    }
+    return columns;
+  };
+
+  // Filter data for the second table based on selection in first table and elasticityLevel
   const filteredTable2Data = useMemo(() => {
     if (!selectedSingle && selectedSingle !== 0) return [];
 
     const selectedCombo = uniqueCombinations[selectedSingle];
     if (!selectedCombo) return [];
 
-    return filteredData.filter((item) =>
-      config.groups[0].keys.every((key) => item[key] === selectedCombo[key])
-    );
-  }, [selectedSingle, uniqueCombinations, filteredData, config.groups]);
+    const uniqueMap = new Map();
 
-  // Show all filtered data in table two, even without selection
-  const allTable2Data = useMemo(() => filteredData, [filteredData]);
+    filteredData
+      .filter((item) =>
+        config.groups[0].keys.every((key) => item[key] === selectedCombo[key])
+      )
+      .forEach((item) => {
+        const combinationKey = config.groups[1].keys
+          .map((key) => item[key])
+          .join("|");
+        if (!uniqueMap.has(combinationKey)) {
+          const filteredItem: Record<string, any> = {};
+          filterColumns(config.columns).forEach((column) => {
+            filteredItem[column.key] = item[column.key];
+          });
+          uniqueMap.set(combinationKey, filteredItem);
+        }
+      });
+
+    return Array.from(uniqueMap.values());
+  }, [
+    selectedSingle,
+    uniqueCombinations,
+    filteredData,
+    config.groups,
+    elasticityLevel,
+  ]);
+
+  // Show all filtered data in table two, even without selection, and filter columns
+  const allTable2Data = useMemo(() => {
+    const uniqueMap = new Map();
+
+    filteredData.forEach((item) => {
+      const combinationKey = config.groups[1].keys.map((key) => item[key]).join("|");
+      if (!uniqueMap.has(combinationKey)) {
+        const filteredItem: Record<string, any> = {};
+        filterColumns(config.columns).forEach((column) => {
+          filteredItem[column.key] = item[column.key];
+        });
+        uniqueMap.set(combinationKey, filteredItem);
+      }
+    });
+
+    return Array.from(uniqueMap.values());
+  }, [filteredData, elasticityLevel]);
 
   // Get the selected items from table 2
   const selectedItems = useMemo(() => {
@@ -171,7 +224,12 @@ const SearchResultsPopper: React.FC<SearchResultsPopperProps> = ({
       open={open}
       anchorEl={anchorEl}
       placement="auto"
-      style={{ width: "70%", zIndex: 999, border: '1px solid #c1c1c1', borderRadius: '5px' }}
+      style={{
+        width: "70%",
+        zIndex: 999,
+        border: "1px solid #c1c1c1",
+        borderRadius: "5px",
+      }}
     >
       <Paper
         ref={popperRef}
@@ -192,7 +250,7 @@ const SearchResultsPopper: React.FC<SearchResultsPopperProps> = ({
             Search Results
           </Box>
           <IconButton size="small" onClick={onClose} sx={{ padding: "2px" }}>
-            <CloseSquareOutlined style={{ fontSize: '18px' }} />
+            <CloseSquareOutlined style={{ fontSize: "18px" }} />
           </IconButton>
         </Box>
 
@@ -236,7 +294,7 @@ const SearchResultsPopper: React.FC<SearchResultsPopperProps> = ({
                   key={index}
                   tableIndex={index}
                   data={getTableData(index)}
-                  config={config}
+                  config={{ ...config, columns: filterColumns(config.columns) }}
                   searchTerm={searchTerm}
                   selectedSingle={selectedSingle}
                   selectedMulti={selectedMulti}

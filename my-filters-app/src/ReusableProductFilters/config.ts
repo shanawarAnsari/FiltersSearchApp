@@ -1,3 +1,8 @@
+interface FilterConfig {
+  type: "single" | "multi";
+  label: string;
+}
+
 interface ConfigMap {
   mfr?: FilterConfig;
   cust?: FilterConfig;
